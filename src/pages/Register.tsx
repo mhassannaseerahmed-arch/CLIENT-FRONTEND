@@ -71,7 +71,7 @@ const Register: React.FC = () => {
             required
           />
         </div>
-
+        {/* 
         <div className="mb-8">
           <label className="block text-sm font-semibold text-gray-700 mb-2">Role (demo)</label>
           <select
@@ -84,7 +84,7 @@ const Register: React.FC = () => {
             <option value="employee">Employee</option>
             <option value="client">Client</option>
           </select>
-        </div>
+        </div> */}
 
         <button
           type="submit"

@@ -15,13 +15,17 @@ export const useData = () => {
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+
+  // --- Loading State ---
+  const [loading, setLoading] = useState(true);
+
   // --- Initial State ---
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  // --- Persistence Logic ---
+  // --- Fetch Data ---
   useEffect(() => {
     if (!user) {
       setClients([]);
@@ -33,24 +37,29 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchData = async () => {
       try {
+        setLoading(true);
+
         const [clientsRes, projectsRes, employeesRes, tasksRes] = await Promise.all([
           axiosInstance.get("/api/clients"),
           axiosInstance.get("/api/projects"),
           axiosInstance.get("/api/employees"),
           axiosInstance.get("/api/tasks"),
         ]);
+
         setClients(clientsRes.data);
         setProjects(projectsRes.data);
         setEmployees(employeesRes.data);
         setTasks(tasksRes.data);
+
       } catch (error) {
         console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchData();
   }, [user]);
-
-  // --- Logic Functions ---
 
   // Clients
   const addClient = async (client: Omit<Client, 'id'>) => {
@@ -153,7 +162,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     try {
       const taskToUpdate = tasks.find(t => t.id === taskId);
       if (!taskToUpdate) return;
-      const response = await axiosInstance.put(`/api/tasks/${taskId}`, { ...taskToUpdate, status });
+
+      const response = await axiosInstance.put(`/api/tasks/${taskId}`, {
+        ...taskToUpdate,
+        status
+      });
+
       setTasks(tasks.map(t => t.id === taskId ? response.data : t));
     } catch (error) {
       console.error("Failed to update task status:", error);
@@ -170,6 +184,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value: DataContextType = {
+    loading,
     clients, addClient, editClient, deleteClient,
     projects, addProject, editProject, deleteProject,
     employees, addEmployee, editEmployee, deleteEmployee,

@@ -52,6 +52,7 @@ export interface AuthContextType {
 }
 
 export interface DataContextType {
+  loading: boolean;
   clients: Client[];
   addClient: (client: Omit<Client, 'id'>) => void;
   editClient: (client: Client) => void;

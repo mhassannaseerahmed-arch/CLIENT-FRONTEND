@@ -1,28 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Edit, Trash2, UserPlus } from "lucide-react";
+import { Search, Edit, Trash2, UserPlus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
 import { Client } from "../services/storage";
 
+const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20];
+
+function getPageNumbers(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, "…", total];
+  if (current >= total - 3) return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
+  return [1, "…", current - 1, current, current + 1, "…", total];
+}
+
 const Clients: React.FC = () => {
   const { clients, deleteClient } = useData();
-
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [search, setSearch] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(5);
 
   const isAuthorized = ["admin", "manager"].includes(user?.role || "");
 
-  // Now TypeScript knows that 'client' is of type 'Client'
-  const filteredClients = clients.filter((client: Client) =>
-    client.name.toLowerCase().includes(search.toLowerCase()) ||
-    client.email.toLowerCase().includes(search.toLowerCase()) ||
-    client.company.toLowerCase().includes(search.toLowerCase())
+  const filteredClients = useMemo(() =>
+    clients.filter((client: Client) =>
+      client.name.toLowerCase().includes(search.toLowerCase()) ||
+      client.email.toLowerCase().includes(search.toLowerCase()) ||
+      client.company.toLowerCase().includes(search.toLowerCase())
+    ),
+    [clients, search]
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / limit));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * limit;
+  const pageSlice = filteredClients.slice(start, start + limit);
+  const pageNumbers = getPageNumbers(safePage, totalPages);
+
+  const goTo = (p: number) => setPage(Math.max(1, Math.min(p, totalPages)));
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPage(1);
+  };
+
+  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLimit(Number(e.target.value));
+    setPage(1);
+  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
+
       {/* Header & Search */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
@@ -36,7 +68,7 @@ const Clients: React.FC = () => {
               type="text"
               placeholder="Search clients..."
               value={search}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              onChange={handleSearch}
               className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none bg-gray-50 hover:bg-white"
             />
           </div>
@@ -52,7 +84,7 @@ const Clients: React.FC = () => {
         </div>
       </div>
 
-      {/* Table Section */}
+      {/* Empty state */}
       {clients.length === 0 ? (
         <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
           <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -60,10 +92,7 @@ const Clients: React.FC = () => {
           </div>
           <h3 className="text-lg font-medium text-gray-900">No clients yet</h3>
           <p className="text-gray-500 mt-1 mb-6">Get started by adding your first client to the system.</p>
-          <Link
-            to="/add-client"
-            className="text-blue-600 font-semibold hover:text-blue-700"
-          >
+          <Link to="/add-client" className="text-blue-600 font-semibold hover:text-blue-700">
             Add your first client →
           </Link>
         </div>
@@ -80,14 +109,14 @@ const Clients: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {filteredClients.length === 0 ? (
+                {pageSlice.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-10 text-center text-gray-500 italic">
                       No results matching "{search}"
                     </td>
                   </tr>
                 ) : (
-                  filteredClients.map((client: Client) => (
+                  pageSlice.map((client: Client) => (
                     <tr key={client.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
@@ -101,11 +130,14 @@ const Clients: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${client.status === "Active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
                             }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${client.status === "Active" ? "bg-green-500" : "bg-yellow-500"}`} />
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full mr-1.5 ${client.status === "Active" ? "bg-green-500" : "bg-yellow-500"
+                              }`}
+                          />
                           {client.status}
                         </span>
                       </td>
@@ -141,6 +173,87 @@ const Clients: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* ── Pagination Bar ──────────────────────────────────────────────── */}
+          {filteredClients.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-3 border-t border-gray-200 bg-gray-50">
+
+              {/* Left: count + per-page */}
+              <div className="flex items-center gap-3 text-sm text-gray-500">
+                <span>
+                  Showing{" "}
+                  <span className="font-semibold text-gray-700">{start + 1}</span>
+                  {" – "}
+                  <span className="font-semibold text-gray-700">
+                    {Math.min(start + limit, filteredClients.length)}
+                  </span>
+                  {" of "}
+                  <span className="font-semibold text-gray-700">{filteredClients.length}</span>
+                  {" clients"}
+                </span>
+                <select
+                  value={limit}
+                  onChange={handleLimitChange}
+                  className="border border-gray-200 rounded-lg px-2 py-1 text-xs font-medium text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                  {ITEMS_PER_PAGE_OPTIONS.map((n) => (
+                    <option key={n} value={n}>{n} / page</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Right: page buttons */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => goTo(1)}
+                  disabled={safePage === 1}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => goTo(safePage - 1)}
+                  disabled={safePage === 1}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {pageNumbers.map((p, i) =>
+                  p === "…" ? (
+                    <span key={`ellipsis-${i}`} className="px-1.5 text-gray-300 text-sm select-none">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => goTo(p as number)}
+                      className={`min-w-[32px] h-8 px-2 rounded-lg text-sm font-medium transition-all ${p === safePage
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                        }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+
+                <button
+                  onClick={() => goTo(safePage + 1)}
+                  disabled={safePage === totalPages}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => goTo(totalPages)}
+                  disabled={safePage === totalPages}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </button>
+              </div>
+
+            </div>
+          )}
         </div>
       )}
     </div>

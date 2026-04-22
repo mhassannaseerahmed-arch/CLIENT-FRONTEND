@@ -6,50 +6,30 @@ import axiosInstance from "../utils/axiosInstance";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? (JSON.parse(savedUser) as User) : null;
-  });
-  const [accessToken, setAccessToken] = useState<string | null>(() => localStorage.getItem("accessToken"));
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
-
-
-  // On app start, try to restore a session (accessToken → /me, otherwise refresh cookie → /me)
+  // 🔥 On app start → just ask backend "who am I?"
   useEffect(() => {
     let cancelled = false;
 
     async function bootstrap() {
       try {
-        if (localStorage.getItem("accessToken")) {
-          const me = await axiosInstance.get<User>("/auth/me");
-          if (cancelled) return;
-          setUser(me.data);
-          localStorage.setItem("user", JSON.stringify(me.data));
-          return;
-        }
-
-        const refresh = await axiosInstance.post<{ accessToken: string }>("/auth/refresh");
+        const res = await axiosInstance.get<User>("/auth/me");
         if (cancelled) return;
-        setAccessToken(refresh.data.accessToken);
-        localStorage.setItem("accessToken", refresh.data.accessToken);
-
-        const me = await axiosInstance.get<User>("/auth/me");
-        if (cancelled) return;
-        setUser(me.data);
-        localStorage.setItem("user", JSON.stringify(me.data));
+        setUser(res.data);
       } catch {
         if (cancelled) return;
         setUser(null);
-        localStorage.removeItem("user");
-        localStorage.removeItem("accessToken");
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
-    void bootstrap();
+    bootstrap();
+
     return () => {
       cancelled = true;
     };
@@ -58,14 +38,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login: AuthContextType["login"] = async ({ email, password }) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.post<{ accessToken: string }>("/auth/login", { email, password });
-      setAccessToken(res.data.accessToken);
-      localStorage.setItem("accessToken", res.data.accessToken);
+      await axiosInstance.post("/auth/login", { email, password });
 
-      const me = await axiosInstance.get<User>("/auth/me");
-      setUser(me.data);
-      localStorage.setItem("user", JSON.stringify(me.data));
+      const res = await axiosInstance.get<User>("/auth/me");
+      setUser(res.data);
+
       navigate("/");
+    } catch (error) {
+      setError("Invalid email or password.");
     } finally {
       setLoading(false);
     }
@@ -74,19 +54,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register: AuthContextType["register"] = async ({ email, username, password, role }) => {
     setLoading(true);
     try {
-      const safeRole: UserRole = role ?? "employee";
-      const res = await axiosInstance.post<{ accessToken: string }>("/auth/register", {
+      const safeRole: UserRole = "employee";
+
+      await axiosInstance.post("/auth/register", {
         email,
         username,
         password,
         role: safeRole,
       });
-      setAccessToken(res.data.accessToken);
-      localStorage.setItem("accessToken", res.data.accessToken);
 
-      const me = await axiosInstance.get<User>("/auth/me");
-      setUser(me.data);
-      localStorage.setItem("user", JSON.stringify(me.data));
+      const res = await axiosInstance.get<User>("/auth/me");
+      setUser(res.data);
+
       navigate("/");
     } finally {
       setLoading(false);
@@ -98,9 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await axiosInstance.post("/auth/logout");
       setUser(null);
-      setAccessToken(null);
-      localStorage.removeItem("user");
-      localStorage.removeItem("accessToken");
       navigate("/login");
     } finally {
       setLoading(false);
@@ -116,8 +92,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
