@@ -59,6 +59,12 @@ sequenceDiagram
 - Dedicated reporting view for business analysis.
 - Configuration settings for system-wide adjustments.
 
+## 📸 Screenshots
+
+| Login Page | Registration Page |
+|------------|-------------------|
+| ![Login](./public/screenshots/login.png) | ![Register](./public/screenshots/register.png) |
+
 ---
 
 ## 🛠️ Tech Stack
