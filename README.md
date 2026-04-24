@@ -1,6 +1,6 @@
-# ShopFlow - Client Management SaaS (Frontend)
+# Client Management SaaS (Frontend)
 
-ShopFlow is a modern, high-performance Client Management SaaS application built to streamline business operations, manage client relationships, track projects, and oversee employee performance. This repository contains the frontend application built with React, TypeScript, and Tailwind CSS.
+Client Management SaaS is a modern, high-performance Client Management SaaS application built to streamline business operations, manage client relationships, track projects, and oversee employee performance. This repository contains the frontend application built with React, TypeScript, and Tailwind CSS.
 
 ## 🚀 Features
 
