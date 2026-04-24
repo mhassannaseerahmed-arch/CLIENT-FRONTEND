@@ -61,9 +61,9 @@ sequenceDiagram
 
 ## 📸 Screenshots
 
-| Login Page | Registration Page |
-|------------|-------------------|
-| ![Login](./public/screenshots/login.png) | ![Register](./public/screenshots/register.png) |
+| Login Page | Registration Page | Dashboard |
+|------------|-------------------|-----------|
+| ![Login](./public/screenshots/login.png) | ![Register](./public/screenshots/register.png) | ![Dashboard](./public/screenshots/dashboard.png) |
 
 ---
 
