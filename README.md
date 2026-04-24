@@ -4,23 +4,9 @@ Client Management SaaS is a modern, high-performance Client Management SaaS appl
 
 ---
 
-<details>
-<summary><b>📐 System Architecture & Workflows</b></summary>
+## 🔐 Authentication Workflow
 
-### 💻 System Architecture
-Visualizing the flow between the Frontend, State Management, and the Backend API.
-
-```mermaid
-graph TD
-    User((User)) -->|Interacts| UI[React Frontend]
-    UI -->|Uses| Context[Auth & Data Context]
-    Context -->|Requests| API[Backend API]
-    API -->|Persists| DB[(Database)]
-    UI -->|Session| LS[Local Storage / Cookies]
-```
-
-### 🔐 Authentication Flow
-The sequential logic for user login and session restoration.
+The sequential logic for user login and session restoration:
 
 ```mermaid
 sequenceDiagram
@@ -38,53 +24,6 @@ sequenceDiagram
     Context-->>App: Update User State
     App->>User: Redirect to Dashboard
 ```
-</details>
-
-<details>
-<summary><b>📊 Data Model (ER Diagram)</b></summary>
-
-### Entity Relationships
-The relationships between core entities in the system.
-
-```mermaid
-erDiagram
-    CLIENT ||--o{ PROJECT : has
-    PROJECT ||--o{ TASK : contains
-    EMPLOYEE ||--o{ TASK : assigned_to
-    
-    CLIENT {
-        string id PK
-        string name
-        string email
-        string company
-        string status
-    }
-    PROJECT {
-        string id PK
-        string name
-        string clientId FK
-        number budget
-        string status
-        string timeline
-    }
-    EMPLOYEE {
-        string id PK
-        string name
-        string email
-        string role
-        string status
-    }
-    TASK {
-        string id PK
-        string projectId FK
-        string employeeId FK
-        string title
-        string status
-    }
-```
-</details>
-
----
 
 ---
 
