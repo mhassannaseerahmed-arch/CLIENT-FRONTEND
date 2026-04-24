@@ -4,7 +4,8 @@ Client Management SaaS is a modern, high-performance Client Management SaaS appl
 
 ---
 
-## 🏗️ Architecture & Workflows
+<details>
+<summary><b>📐 System Architecture & Workflows</b></summary>
 
 ### 💻 System Architecture
 Visualizing the flow between the Frontend, State Management, and the Backend API.
@@ -37,8 +38,12 @@ sequenceDiagram
     Context-->>App: Update User State
     App->>User: Redirect to Dashboard
 ```
+</details>
 
-### 📊 Data Model (ER Diagram)
+<details>
+<summary><b>📊 Data Model (ER Diagram)</b></summary>
+
+### Entity Relationships
 The relationships between core entities in the system.
 
 ```mermaid
@@ -77,6 +82,9 @@ erDiagram
         string status
     }
 ```
+</details>
+
+---
 
 ---
 
@@ -129,21 +137,6 @@ erDiagram
 
 ## 📁 Project Structure
 
-```mermaid
-graph TD
-    src[src/] --> components[components/]
-    src --> context[context/]
-    src --> layout[layout/]
-    src --> pages[pages/]
-    src --> services[services/]
-    src --> utils[utils/]
-    
-    pages --> Dashboard
-    pages --> Clients
-    pages --> Projects
-    pages --> Employees
-    pages --> Auth
-```
 
 ```text
 src/
