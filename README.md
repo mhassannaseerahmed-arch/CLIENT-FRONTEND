@@ -63,7 +63,7 @@ sequenceDiagram
 
 | Login Page | Registration Page | Dashboard |
 |------------|-------------------|-----------|
-| ![Login](./public/screenshots/login.png) | ![Register](./public/screenshots/register.png) | ![Dashboard](./public/screenshots/dashboard.png) |
+| ![Login](./public/screenshots/login.png) | ![Register](./public/screenshots/register.png) | ![Dashboard](./public/screenshots/dashboard_new.png) |
 
 ---
 
